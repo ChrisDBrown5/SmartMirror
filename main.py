@@ -5,6 +5,11 @@
 #			and I will probably be using this file for all updates and future
 #			creation involving the magic mirror (will become known as photon mirror)
 
+#Update 10/23/16: Looking to use a different GUI, starting work with Tkinter to see if it's a viable module.
+#                  Also added a few pictures for weather information, but these are likely to change, so I will not upload them, 
+#                  nor include the code needed to use them, at this time.
+
+
 #So far, I've gotten temperature, date, time, and weather to work and appear on a black screen with white characters, left aligned.
 
 from datetime import datetime
