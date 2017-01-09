@@ -3,7 +3,7 @@ Aka Magic Mirror
 
 Photon Mirror runs on Python 2.7
 
-This project uses a few modules I found from the internet, including Graphics by Zelle, PYOWM for weather, and Datetime. 
+This project uses a few modules I found from the internet, including tkinter, PYOWM for weather, and Datetime. 
 All work other than creating the modules was coded by me (For now, Chris Brown, 10/15/2016).
 
 I started this project 10/15/2016.
