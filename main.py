@@ -8,92 +8,206 @@
 #Update 10/23/16: Looking to use a different GUI, starting work with Tkinter to see if it's a viable module.
 #                  Also added a few pictures for weather information, but these are likely to change, so I will not upload them, 
 #                  nor include the code needed to use them, at this time.
-
-
 #So far, I've gotten temperature, date, time, and weather to work and appear on a black screen with white characters, left aligned.
 
+
+
+#Update 1/8/17: Original build was good draft. Rebuilt it with new API's. Added stocks and bus schedule. Plan to add calander soon.
+
+
+# -*- coding: utf-8 -*-
+#^^^^ This is for the degre symbol for temperature
+import Tkinter
+#GUI package^
 from datetime import datetime
 from datetime import date
 import pyowm
 import time
-from graphics import *
+import unirest
+from yahoo_finance import Share
 
-#Opening the graphics window
-win = GraphWin("", 1440, 900)
 
-def main():
-    #initializations, cause it doesn't work all the time without them.
-    Sun = ""
-    Temper = ""
-    t = ""
-    d = ""
-    
-    if owm.is_API_online()==True:
-        forecast = owm.daily_forecast("Gainesville,US")
-        #tomorrow = pyowm.timeutils.tomorrow()
-        if forecast.will_have_rain()==False:
-                rain = 'No rain today!'
-                if forcast.will_have_sun() ==False:
-                        Sun = 'But it wont be sunny.'
-                else:
-                        Sun = 'AND it is going to be sunny!'
-        else:
-                rain = "Bring an umbrella today,\nthere is a chance of rain"
-
-        observation = owm.weather_at_place('Gainesville,US')
-        w = observation.get_weather()
-        #this creates a dictionary of max, min, kf?, and average temp
-        temp = w.get_temperature('fahrenheit') 
-        #temp['temp'] calls the dictionary of average temp
-        tempe = str(temp['temp'])
-        Temper = tempe + " Degrees Fahrenheit"
-        
-    else:
-        #Signals that the program is offline/not connected to Weather API
-        win.setBackground('blue')
-        time.sleep(5)
-    today = date.today()
-    #ex. "Monday, March 5, 2016"
-    d = today.strftime("%A, %B %d, %Y")
-    #ex. "05:26PM"
-    t = datetime.now().strftime("%I:%M%p")
-    win.setBackground('black')
-    #set text in respective places
-    mTime = Text(Point(100,100), t)
-    mDate = Text(Point(213,50), d)
-    mTemper = Text(Point(203,150), Temper)
-    mSun = Text(Point(150,200), Sun)
-    mRain = Text(Point(195,250), rain)
-    #Change text color to white and increase size
-    mTime.setFill('white')
-    mDate.setFill('white')
-    mTemper.setFill('white')
-    mSun.setFill('white')
-    mRain.setFill('white')
-    mTime.setSize(20)
-    mDate.setSize(20)
-    mTemper.setSize(20)
-    mSun.setSize(20)
-    mRain.setSize(20)
-    #print text on window
-    mTime.draw(win)
-    mDate.draw(win)
-    mTemper.draw(win)
-    mSun.draw(win)
-    mRain.draw(win)
-    #This waits for a mouseclick, then closes
-    #win.mouseget()
-    # I changed it..^
-    time.sleep(5)
-    #updates every 5 seconds, that way it doesn't ping the weather API too often
-    #pinging too often results in them possibly shutting it off for my API Key
-    main()
-    
-
-    
-    
 #API KEY         vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 owm = pyowm.OWM('72c92dce615514f154477952ce9af6d8')
-#Start the actual program.
-main()
+
+###########################################################################################
+def getTime():
+    timeNow = datetime.now().strftime("%I:%M:%S %p")
+    return timeNow
+
+def getDate():
+    today = date.today()
+    dateNow = today.strftime("%A, %B %d, %Y")
+    return dateNow
+
+def getWeather():
+    forecast = owm.weather_at_place('Gainesville,US').get_weather()
+    Sun = "Today's Forcast: "
+    Sun = Sun + forecast.get_status()
+    
+    return Sun
+
+def getWeather2():
+    forecast = owm.weather_at_place('Gainesville,US').get_weather()
+    if forecast.get_status()=="Clear":
+        level = 1
+    else:
+        level = 3
+    return level
+
+def getTemp():
+    w = owm.weather_at_place('Gainesville,US').get_weather()
+    #this creates a dictionary of max, min, kf?, and average temp
+    temp = w.get_temperature('fahrenheit') 
+    #temp['temp'] calls the dictionary of average temp
+    tempe = str(temp['temp'])
+    Temper = tempe +  "°F"
+    #pinging too often results in them possibly shutting it off for my API Key
+    return Temper
+
+def td():
+    global time1
+    # get the current local time from the PC
+    time2 = getTime()
+    date = getDate()
+    # if time string has changed, update it
+    if time2 != time1:
+        time1 = time2
+        ti.config(text=time2)
+    if date != getDate():
+        da.config(text=date)
+    # updates time every 200 milliseconds.
+    top.after(200, td)
+
+def te():
+    temp.config(text = getTemp())
+    top.after(60000, te)
+    
+def w():
+    sun.config(text = getWeather())
+    top.after(60100, w)
+
+def i():
+    global level1
+    level2 = getWeather2()
+    if level1 != level2:
+        if getWeather2() == 1:
+            im = Tkinter.PhotoImage(file = "sun-128.gif")
+        elif getWeather2() == 2:
+            im = Tkinter.PhotoImage(file = "clouds-128.gif")
+        else:
+            im = Tkinter.PhotoImage(file = "rain-128.gif")
+        icon.config(image = im)
+    top.after(60150,i)
+
+def getDist():
+    # These code snippets use an open-source library. http://unirest.io/python
+    response = unirest.get("https://transloc-api-1-2.p.mashape.com/arrival-estimates.json?agencies=116&callback=call&routes=4001178&stops=4091950%2C1408",
+                          headers={"X-Mashape-Key": "WMF100LDSSmsh0jWk7IQ8V3Bt5Pip1PSC8Cjsnwip0newzTPkO","Accept": "application/json"})
+    x = str(response.body['data'])
+    time2 = x[119:124]
+    b = "122 arrives at " + time2 + "."
+    return b
+
+def bu():
+    bus.config(text = getDist())
+    top.after(5030, bu)
+
+def getStock(ticker):
+    stock = Share(ticker)
+    #name = stock.get_name()
+    po = str(stock.get_open())
+    pn =  str(stock.get_price())
+    pcl =  str(stock.get_prev_close())
+    pc = str(stock.get_percent_change())
+    low = str(stock.get_days_low())
+    high = str(stock.get_days_high())
+    h = datetime.now().strftime("%I")
+    p = datetime.now().strftime("%p")
+    x = ticker.upper() +"\nCurrent: "+ pn + "\nClose: " + pcl + "\nChange: " + pc + "\nLow: " + low + "\nHigh: " + high
+    y = ticker.upper() + "\nCurrent: " + pn + "\nOpen: " + po +"\nChange: " + pc + "\nLow: " + low + "\nHigh: " + high
+    
+    if h <= "4" and p == "PM":
+        return x
+    elif h >= "4" and p == "PM":
+        return y
+    elif h <= "8" and p == "AM":
+        return y
+    else:
+        return x
+
+
+    
+def sto1():
+    stock1.config(text = getStock('ugaz'))
+    #stock2.config(text = getStock('xgti'))
+    #add more stocks as necessary
+    top.after(3000, sto1)
+
+def sto2():
+    #stock1.config(text = getStock('UGAZ'))
+    stock2.config(text = getStock('xgti'))
+    #add more stocks as necessary
+    top.after(8000, sto2)
+
+level1 = getWeather2()
+time1 = getTime()
+top = Tkinter.Tk()
+top.title("Chris' Magic Mirror")
+top.geometry("1440x900")
+top.wm_iconbitmap("favicon.ico")
+top.configure(bg = 'black')
+temp = Tkinter.Label(top, bg = 'black', fg = 'white', font=('times', 20, 'bold'))
+sun = Tkinter.Label(top, bg = 'black', fg = 'white', font=('times', 20, 'bold'))
+ti = Tkinter.Label(top, bg = 'black', fg = 'white', font=('times', 40, 'bold'))
+da = Tkinter.Label(top, bg = 'black', fg = 'white', font=('times', 20, 'bold'))
+icon = Tkinter.Label(top, bg = 'black')
+bus = Tkinter.Label(top, bg = 'black', fg = 'white', font=('times', 20, 'bold'))
+#add more buses as necessary
+stock1 = Tkinter.Label(top, bg = 'black', fg = 'white', font=('times', 12, 'bold'))
+stock2 = Tkinter.Label(top, bg = 'black', fg = 'white', font=('times', 12, 'bold'))
+#add more stocks as necessary
+
+ti.config(text = getTime())
+da.config(text = getDate())
+temp.config(text = getTemp())
+sun.config(text = getWeather())
+bus.config(text = getDist())
+stock1.config(text = getStock('UGAZ'))
+stock2.config(text = getStock('xgti'))
+if getWeather2() == 1:
+    im = Tkinter.PhotoImage(file = "sun-128.gif")
+elif getWeather2() == 3:
+    im = Tkinter.PhotoImage(file = "rain-128.gif")
+else:
+    im = Tkinter.PhotoImage(file = "clouds-128.gif")
+icon.config(image = im)
+
+ti.pack()
+ti.place(bordermode = 'outside', x = 30, y = 30)
+da.pack()
+da.place(bordermode = 'outside', x = 30, y = 90)
+temp.pack()
+temp.place(bordermode= 'outside', x = 1215, y = 30)
+icon.pack()
+icon.place(bordermode = 'outside', x = 1190, y = 70)
+sun.pack()
+sun.place(bordermode = 'outside', x = 1100, y = 200)
+bus.pack()
+bus.place(bordermode = 'outside', x = 1085, y = 820)
+stock1.pack()
+stock1.place(bordermode = 'outside', x = 30, y = 590)
+stock2.pack()
+stock2.place(bordermode = 'outside', x = 30, y = 730)
+top.after(100, td)
+top.after(3000, sto1)
+top.after(8000, sto2)
+top.after(5030, bu)
+top.after(150000, te)
+top.after(300000, w)
+top.after(300150, i)
+top.mainloop()
+#use place functions to change the positions
+
+
 
